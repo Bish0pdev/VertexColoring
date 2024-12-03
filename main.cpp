@@ -25,6 +25,17 @@ int main()
             std::cout << "Handling event closed" <<std::endl;
             exit(EXIT_SUCCESS);
             }
+
+            if(event.type == sf::Event::MouseButtonPressed) {
+                std::cout << "Mouse Button Pressed" << std::endl;
+            }
+
+            if(event.type == sf::Event::KeyReleased) {
+                
+                if(event.key.code == sf::Keyboard::R) {
+                    std::cout << "Key Pressed" << std::endl;
+                }
+            }
         }
 
         window.clear(sf::Color::Black); // Clear with black background
