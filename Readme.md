@@ -5,13 +5,14 @@ Graph coloring, a fundamental concept in graph theory, involves assigning labels
 
 The use of "colors" for labeling vertices originates from map coloring. While colors like red and blue are sometimes used for small graphs, it is generally understood that the labels are represented by integers, such as {1, 2, 3, ...}.
 
-![A proper vertex coloring of the Petersen graph with 3 colors, the minimum number possible.](image.png)
+![A proper vertex coloring of the Petersen graph with 3 colors, the minimum number possible.](images/image.png)
 
 A proper vertex coloring of the Petersen graph with 3 colors, the minimum number possible.
 ### Dependances
 This project is built and compiled in c++, using the sfml library on for things input and graphics. Any other dependances are stated here
 * iostream
 * string
+* random
 
 ### Running the program
 Any changes made will need to be compiled using ```gcc```. I am running linux *Ubuntu 22.04.5 LTS*.
