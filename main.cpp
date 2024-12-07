@@ -19,7 +19,7 @@ int main()
         std::cout << "ERROR: font -> " << fontName;
         exit(EXIT_FAILURE);
     }
-
+    sf::Color currentColor = sf::Color::Red;
 
     // gets 'entropy' from device that generates random numbers itself
     // to seed a mersenne twister (pseudo) random generator
@@ -30,43 +30,40 @@ int main()
     std::uniform_int_distribution<std::size_t> distribution(0, colors.size() - 1);
 
     while (window.isOpen())
+{
+    sf::Event event;
+    while (window.pollEvent(event))
     {
-        sf::Event event;
-        while (window.pollEvent(event))
-        {
-            if (event.type == sf::Event::Closed)
-            {
+        if (event.type == sf::Event::Closed)
             window.close();
-            std::cout << "Handling event closed" << std::endl;
-            exit(EXIT_SUCCESS);
-            }
 
-            if(event.type == sf::Event::MouseButtonPressed) {
-                if(event.type == sf::Event::MouseLeft) {
-                    std::cout << "Left Mouse Button Pressed" << std::endl;
-                }
-            }
-
-            if(event.type == sf::Event::KeyReleased) {
-                
-                if(event.key.code == sf::Keyboard::R) {
-                    std::cout << "Key Pressed" << std::endl;
-                    std::size_t number = distribution(generator);
-                }
-            }
-           
-        }
-        
-        window.clear(sf::Color::Black); // Clear with black background
-        sf::Vertex vertices[2] =
+        if (event.type == sf::Event::MouseButtonPressed && event.mouseButton.button == sf::Mouse::Left)
         {
-            sf::Vertex(sf::Vector2f(10.f, 50.f), sf::Color::Red, sf::Vector2f(100.f, 100.f)),
-            sf::Vertex(sf::Vector2f(10.f, 25.f), sf::Color::Red, sf::Vector2f(100.f, 100.f))
-        };
+            sf::Vector2f mousePosition(event.mouseButton.x, event.mouseButton.y);
+            sf::Vertex vertex(mousePosition, currentColor);
+            vertices.push_back(vertex);
+        }
 
-        window.draw(vertices, 2, sf::Lines);
-        window.display();
+        if (event.type == sf::Event::KeyReleased)
+        {
+            if (event.key.code == sf::Keyboard::R) currentColor = sf::Color::Red;
+            if (event.key.code == sf::Keyboard::G) currentColor = sf::Color::Green;
+            if (event.key.code == sf::Keyboard::B) currentColor = sf::Color::Blue;
+            if (event.key.code == sf::Keyboard::C) vertices.clear();
+            if (event.key.code == sf::Keyboard::Z && !vertices.empty()) vertices.pop_back();
+        }
     }
+
+    window.clear(sf::Color::Black);
+
+    if (!vertices.empty())
+    {
+        window.draw(&vertices[0], vertices.size(), sf::LineStrip);
+    }
+
+    window.display();
+    }
+
 
     return 0;
 }
