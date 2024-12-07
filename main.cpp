@@ -3,23 +3,23 @@
 #include <string>
 #include <iostream>
 #include <random>
+#include <vector>
 int main()
 {
     sf::RenderWindow window(sf::VideoMode(200, 200), "SFML Test");
     std::array<sf::Color, 3> colors = {sf::Color::Blue,sf::Color::Red,sf::Color::Green};
-    // RectangleShape setup
-    sf::RectangleShape line(sf::Vector2f(150.f, 5.f));
-    sf::RectangleShape line2(sf::Vector2f(100.f,100.f));
+    sf::Vertex vertex(sf::Vector2f(10.f, 50.f), sf::Color::Red, sf::Vector2f(100.f, 100.f));
+    std::vector<sf::Vertex> vertices;
+    vertices.push_back(vertex);
 
-    line.setOrigin(line.getSize().x / 2, line.getSize().y / 2);
-    line.setPosition(100.f, 100.f); // Center of the window
-    line.setFillColor(sf::Color::Blue); // Distinguishable color
-    line.rotate(45.f);
+    //Text setup
+    sf::Font font;
+    std::string fontName = "Arimo_Ittalic.ttf";
+    if(!font.loadFromFile(fontName)) {
+        std::cout << "ERROR: font -> " << fontName;
+        exit(EXIT_FAILURE);
+    }
 
-    line2.setOrigin(line2.getSize().x / 2, line2.getSize().y / 2);
-    line2.setPosition(100.f, 100.f); // Center of the window
-    line2.setFillColor(sf::Color::Red); // Distinguishable color
-    line2.rotate(45.f);
 
     // gets 'entropy' from device that generates random numbers itself
     // to seed a mersenne twister (pseudo) random generator
@@ -52,15 +52,19 @@ int main()
                 if(event.key.code == sf::Keyboard::R) {
                     std::cout << "Key Pressed" << std::endl;
                     std::size_t number = distribution(generator);
-                    line.setFillColor(colors[number]);
-                    line2.setFillColor(colors[number]);
                 }
             }
+           
         }
-
+        
         window.clear(sf::Color::Black); // Clear with black background
-        window.draw(line); // Draw only the rectangle
-        window.draw(line2); //Drawing the point
+        sf::Vertex vertices[2] =
+        {
+            sf::Vertex(sf::Vector2f(10.f, 50.f), sf::Color::Red, sf::Vector2f(100.f, 100.f)),
+            sf::Vertex(sf::Vector2f(10.f, 25.f), sf::Color::Red, sf::Vector2f(100.f, 100.f))
+        };
+
+        window.draw(vertices, 2, sf::Lines);
         window.display();
     }
 
