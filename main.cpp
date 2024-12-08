@@ -12,6 +12,7 @@ int main()
     std::vector<sf::Vertex> vertices;
     vertices.push_back(vertex);
 
+
     //Text setup
     sf::Font font;
     std::string fontName = "Arimo_Ittalic.ttf";
@@ -55,6 +56,14 @@ int main()
     }
 
     window.clear(sf::Color::Black);
+
+    for (const auto& vertex : vertices)
+    {
+        sf::CircleShape dot(3.f); // Radius of the dot
+        dot.setFillColor(vertex.color); // Match the vertex color
+        dot.setPosition(vertex.position.x - dot.getRadius(), vertex.position.y - dot.getRadius()); // Center the dot
+        window.draw(dot);
+    }
 
     if (!vertices.empty())
     {
