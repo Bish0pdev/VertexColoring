@@ -40,6 +40,9 @@ int main() {
     std::vector<Edge> edges;
 
     bool isMousePressed = false;
+
+    bool isConnecting = false;
+
     std::array<sf::Color, 3> colors = {sf::Color::Blue,sf::Color::Red,sf::Color::Green};
     sf::Color currentColor;
 
@@ -73,10 +76,12 @@ int main() {
                         if (selectedVertexIndex == static_cast<std::size_t>(-1)) {
                             // First vertex selected
                             selectedVertexIndex = clickedVertexIndex;
+                            isConnecting = true;
                         } else {
                             // Second vertex selected, create edge
                             edges.push_back({selectedVertexIndex, clickedVertexIndex});
                             selectedVertexIndex = static_cast<std::size_t>(-1); // Reset selection
+                            isConnecting = false;
                         }
                     } else {
                         // Add a new vertex
@@ -100,8 +105,13 @@ int main() {
         }
 
         // Draw
+        if(!isConnecting) {
         window.clear(sf::Color::Black);
-
+        } else
+        {
+            window.clear(sf::Color(40,40,40,1));
+        }
+        
         // Draw edges
         for (const auto& edge : edges) {
             sf::Vertex line[] = {
