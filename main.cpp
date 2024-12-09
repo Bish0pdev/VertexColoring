@@ -27,6 +27,7 @@ int main()
     float accumulator = 0.0f;                // Tracks unprocessed time
     sf::Clock clock;
     
+    bool isMousePressed = false;
 
     //Load font(s)
     sf::Font font;
@@ -46,7 +47,7 @@ int main()
             }
 
             //--Mouse Handling--
-            bool isMousePressed = false;
+            
 
             if (sf::Mouse::isButtonPressed(sf::Mouse::Left)) {
                 if (!isMousePressed) {
@@ -59,10 +60,6 @@ int main()
                 }
             } else {
                 isMousePressed = false;
-            }
-
-            if(isMousePressed) {
-                
             }
             //----
             if (event.type == sf::Event::KeyReleased) //input
