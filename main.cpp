@@ -40,7 +40,16 @@ int main() {
     std::vector<Edge> edges;
 
     bool isMousePressed = false;
-    sf::Color currentColor = sf::Color::Red;
+    std::array<sf::Color, 3> colors = {sf::Color::Blue,sf::Color::Red,sf::Color::Green};
+    sf::Color currentColor;
+
+    // gets 'entropy' from device that generates random numbers itself
+    // to seed a mersenne twister (pseudo) random generator
+    std::mt19937 generator(std::random_device{}());
+
+    // make sure all numbers have an equal chance. 
+    // range is inclusive (so we need -1 for vector index)
+    std::uniform_int_distribution<std::size_t> distribution(0, colors.size() - 1);
 
     // Variables to track vertex selection for edge creation
     std::size_t selectedVertexIndex = static_cast<std::size_t>(-1);
@@ -71,6 +80,7 @@ int main() {
                         }
                     } else {
                         // Add a new vertex
+                        currentColor = colors[distribution(generator)];
                         addVertex(worldPosition, currentColor, vertices);
                     }
                     isMousePressed = true;
