@@ -5,20 +5,42 @@
 #include <random>
 #include <vector>
 
-// Function to create a vertex and add it to the vector
-void addVertex(const sf::Event::MouseButtonEvent& mouseEvent, const sf::Color& color, std::vector<sf::Vertex>& vertices) {
-    sf::Vector2f mousePosition(mouseEvent.x, mouseEvent.y);
-    sf::Vertex vertex(mousePosition, color);
+struct Vertex {
+    sf::Vector2f position;
+    sf::Color color = sf::Color::White; // Default uncolored
+    int id; // Unique identifier
+};
+
+struct Edge {
+    int v1; // Vertex 1 ID
+    int v2; // Vertex 2 ID
+};
+
+void addEdge(const Vertex& v1, const Vertex& v2, std::vector<Edge>& edges) {
+    edges.push_back({v1.id, v2.id});
+}
+
+// Function to add a vertex at the mouse position
+void addVertex(const sf::Vector2f& mousePosition, const sf::Color& color,
+               std::vector<sf::CircleShape>& vertices) {
+    sf::CircleShape vertex(5.f); // Radius of the vertex
+    vertex.setFillColor(color);  // Set the vertex color
+    vertex.setPosition(mousePosition.x - vertex.getRadius(),
+                        mousePosition.y - vertex.getRadius()); // Center the vertex at mouse position
     vertices.push_back(vertex);
 }
+
 
 int main()
 {
     sf::RenderWindow window(sf::VideoMode(200, 200), "SFML Test");
-    std::array<sf::Color, 3> colors = {sf::Color::Blue,sf::Color::Red,sf::Color::Green};
-    //sf::Vertex vertex(sf::Vector2f(10.f, 50.f), sf::Color::Red, sf::Vector2f(100.f, 100.f));
-    std::vector<sf::Vertex> vertices;
+    std::vector<Vertex> vertices;
+    std::vector<Edge> edges;
 
+    const float fixedTimeStep = 1.0f / 60.0f; // 60 updates per second
+    float accumulator = 0.0f;                // Tracks unprocessed time
+    sf::Clock clock;
+    
 
     //Load font(s)
     sf::Font font;
@@ -29,30 +51,33 @@ int main()
     }
     sf::Color currentColor = sf::Color::Red;
 
-
-
-    // gets 'entropy' from device that generates random numbers itself
-    // to seed a mersenne twister (pseudo) random generator
-    std::mt19937 generator(std::random_device{}());
-
-    // make sure all numbers have an equal chance. 
-    // range is inclusive (so we need -1 for vector index)
-    std::uniform_int_distribution<std::size_t> distribution(0, colors.size() - 1);
-
     while (window.isOpen()) {
         sf::Event event;
         while (window.pollEvent(event))
         {
-            if (event.type == sf::Event::Closed)
+            if (event.type == sf::Event::Closed) {
                 window.close();
-
-            if (event.type == sf::Event::MouseButtonPressed && event.mouseButton.button == sf::Mouse::Left)
-            {
-                currentColor = colors[distribution(generator)];
-
-                addVertex(event.mouseButton, currentColor, vertices);
             }
 
+            //--Mouse Handling--
+            bool isMousePressed = false;
+
+            if (sf::Mouse::isButtonPressed(sf::Mouse::Left)) {
+                if (!isMousePressed) {
+                    //On click
+                    
+                    isMousePressed = true;
+                }
+            } else {
+                isMousePressed = false;
+            }
+
+            if(isMousePressed) {
+                std::cout << "Mouse button pressed" << std::endl;
+                sf::Vector2i mousePosition = sf::Mouse::getPosition(window);
+                sf::Vector2f worldPosition(static_cast<float>(mousePosition.x), static_cast<float>(mousePosition.y));
+            }
+            //----
             if (event.type == sf::Event::KeyReleased) //input
             {
                 if (event.key.code == sf::Keyboard::C) vertices.clear();
@@ -64,6 +89,7 @@ int main()
         //Start of game/Update loop
         window.clear(sf::Color::Black); 
 
+        //Draw Vertices
         for (const auto& vertex : vertices)
         {
             sf::CircleShape dot(4.f); // Radius of the dot
@@ -72,10 +98,14 @@ int main()
             window.draw(dot);
         }
 
-        if (!vertices.empty())
+        //Fixed Time Set
+        float deltaTime = clock.restart().asSeconds();
+        accumulator += deltaTime;
+        while (accumulator >= fixedTimeStep)
         {
-            window.draw(&vertices[0], vertices.size(), sf::LineStrip);
+            accumulator -= fixedTimeStep;
         }
+        
         window.display();
     }
 
