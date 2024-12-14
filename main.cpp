@@ -62,7 +62,7 @@ sf::Color getColorByIndex(std::size_t colorIndex) {
 }
 
 // Function to perform greedy vertex coloring
-std::vector<std::size_t> colorVertices(const std::map<std::size_t, std::set<std::size_t>>& adjacencyList, std::size_t numVertices) {
+std::vector<std::size_t> colorGraphGreedy(const std::map<std::size_t, std::set<std::size_t>>& adjacencyList, std::size_t numVertices) {
     std::vector<std::size_t> vertexColors(numVertices, -1); // -1 indicates no color assigned
     for (std::size_t vertex = 0; vertex < numVertices; ++vertex) {
         // Collect colors of adjacent vertices
@@ -83,14 +83,76 @@ std::vector<std::size_t> colorVertices(const std::map<std::size_t, std::set<std:
     return vertexColors;
 }
 
+
+//-- Backtracking Methods
+bool isColorValid(const std::map<std::size_t, std::set<std::size_t>>& adjacencyList,
+                  const std::vector<std::size_t>& vertexColors,
+                  std::size_t vertex,
+                  std::size_t color) {
+    for (std::size_t neighbor : adjacencyList.at(vertex)) {
+        if (vertexColors[neighbor] == color) {
+            return false; // Conflict with an adjacent vertex
+        }
+    }
+    return true;
+}
+
+bool colorGraphBacktracking(const std::map<std::size_t, std::set<std::size_t>>& adjacencyList,
+                            std::vector<std::size_t>& vertexColors,
+                            std::size_t vertex,
+                            std::size_t maxColors) {
+    if (vertex == vertexColors.size()) {
+        return true; // All vertices are successfully colored
+    }
+
+    // Try each color
+    for (std::size_t color = 0; color < maxColors; ++color) {
+        if (isColorValid(adjacencyList, vertexColors, vertex, color)) {
+            vertexColors[vertex] = color; // Assign the color
+
+            // Recursively color the next vertex
+            if (colorGraphBacktracking(adjacencyList, vertexColors, vertex + 1, maxColors)) {
+                return true; // Found a solution
+            }
+
+            vertexColors[vertex] = -1; // Backtrack
+        }
+    }
+
+    return false; // No valid coloring found
+}
+
+std::vector<std::size_t> colorGraphUsingBacktracking(const std::map<std::size_t, std::set<std::size_t>>& adjacencyList,
+                                                     std::size_t numVertices,
+                                                     std::size_t maxColors) {
+    std::vector<std::size_t> vertexColors(numVertices, -1); // Initialize all vertices as uncolored
+    if (colorGraphBacktracking(adjacencyList, vertexColors, 0, maxColors)) {
+        return vertexColors; // Return the coloring solution
+    } else {
+        return {}; // Return an empty vector if no solution is found
+    }
+}
+
+//----
+
+
 int main() {
     sf::RenderWindow window(sf::VideoMode(800, 600), "Vertex Coloring");
+    sf::View view(sf::FloatRect(0.f, 0.f, 800.f, 600.f)); // Default view
     std::vector<sf::CircleShape> vertices;
     std::vector<Edge> edges;
 
+    
+    bool physicsEnabled = false;
     bool isMousePressed = false;
     bool isConnecting = false;
+    bool isDragging = false;
+    float zoomLevel = 1.f;
 
+    bool backtracking = false;
+
+    sf::Color backgroundColor;
+    sf::Vector2i initialMousePosition;
     std::size_t selectedVertexIndex = static_cast<std::size_t>(-1);
 
     // Font and Text for displaying info
@@ -105,41 +167,66 @@ int main() {
     vertexCountText.setCharacterSize(20);
     vertexCountText.setFillColor(sf::Color::White);
     vertexCountText.setPosition(10.f, 10.f);
-
+    vertexCountText.setString("Vertices: ");
     sf::Text colorCountText;
     colorCountText.setFont(font);
     colorCountText.setCharacterSize(20);
     colorCountText.setFillColor(sf::Color::White);
     colorCountText.setPosition(10.f, 40.f);
+    colorCountText.setString("Colors: ");
 
+    sf::Text solverModeText;
+    solverModeText.setFont(font);
+    solverModeText.setCharacterSize(20);
+    solverModeText.setFillColor(sf::Color::White);
+    solverModeText.setPosition(10.f,70.f);
+    
 
     // Variable to store current coloring
     std::vector<std::size_t> currentColors;
 
     while (window.isOpen()) {
         sf::Event event;
-        sf::Vector2i mousePosition = sf::Mouse::getPosition(window);
-         sf::Vector2f worldPosition(static_cast<float>(mousePosition.x), static_cast<float>(mousePosition.y));
         while (window.pollEvent(event)) {
             if (event.type == sf::Event::Closed) {
                 window.close();
             }
 
             //--Mouse Handling--
+            if (event.type == sf::Event::MouseWheelScrolled) {
+                if (event.mouseWheelScroll.delta > 0) {
+                    zoomLevel *= 0.9f; // Zoom in (reduce view size)
+                } else if (event.mouseWheelScroll.delta < 0) {
+                    zoomLevel *= 1.1f; // Zoom out (increase view size)
+                }
+                view.setSize(window.getDefaultView().getSize() * zoomLevel);
+            }
+
+            if (sf::Mouse::isButtonPressed(sf::Mouse::Right)) {
+                if (!isDragging) {
+                    isDragging = true;
+                    initialMousePosition = sf::Mouse::getPosition(window);
+                } else {
+                    sf::Vector2i currentMousePosition = sf::Mouse::getPosition(window);
+                    sf::Vector2f delta = window.mapPixelToCoords(initialMousePosition) -
+                                         window.mapPixelToCoords(currentMousePosition);
+                    view.move(delta);
+                    initialMousePosition = currentMousePosition; // Update for continuous dragging
+                }
+            } else {
+                isDragging = false;
+            }
+
             if (sf::Mouse::isButtonPressed(sf::Mouse::Left)) {
                 if (!isMousePressed) {
-                    
-                   
-
-                    // Check if clicking on an existing vertex
+                    // Handle vertex and edge logic
+                    sf::Vector2f worldPosition = window.mapPixelToCoords(sf::Mouse::getPosition(window), view);
                     std::size_t clickedVertexIndex = findVertex(worldPosition, vertices);
                     if (clickedVertexIndex != static_cast<std::size_t>(-1)) {
                         if (selectedVertexIndex == static_cast<std::size_t>(-1)) {
-                            // First vertex selected
                             selectedVertexIndex = clickedVertexIndex;
                             isConnecting = true;
                         } else {
-                            // Second vertex selected, create edge
                             edges.push_back({selectedVertexIndex, clickedVertexIndex});
                             selectedVertexIndex = static_cast<std::size_t>(-1); // Reset selection
                             isConnecting = false;
@@ -161,34 +248,35 @@ int main() {
                     currentColors.clear();
                 }
                 if (event.key.code == sf::Keyboard::Space) {
-                    // Recalculate vertex colors
                     auto adjacencyList = buildAdjacencyList(edges, vertices.size());
-                    currentColors = colorVertices(adjacencyList, vertices.size());
-
-                    // Update text
+                    if(backtracking) {
+                        currentColors = colorGraphUsingBacktracking(adjacencyList, vertices.size(), 6);
+                    } else {
+                    currentColors = colorGraphGreedy(adjacencyList, vertices.size());
+                    }
                     vertexCountText.setString("Vertices: " + std::to_string(vertices.size()));
                     std::set<std::size_t> uniqueColors(currentColors.begin(), currentColors.end());
                     colorCountText.setString("Colors: " + std::to_string(uniqueColors.size()));
+                }
+                if (event.key.code == sf::Keyboard::M) {
+                    backtracking = !backtracking;
+                }
+                if (event.key.code == sf::Keyboard::P) {
+                    physicsEnabled = !physicsEnabled;
                 }
                 if (event.key.code == sf::Keyboard::Escape) window.close();
             }
         }
 
-        // Update vertex colors based on current coloring
+        // Update vertex colors
         if (!currentColors.empty()) {
             for (std::size_t i = 0; i < vertices.size(); ++i) {
                 vertices[i].setFillColor(getColorByIndex(currentColors[i]));
             }
         }
-
-        // Draw background
-        if(isConnecting) {
-           window.clear(sf::Color(40,40,40,1));
-        } else
-        {
-             window.clear(sf::Color::Black);
-        }
-        
+        // Clear and set view
+        window.clear(backgroundColor);
+        window.setView(view);
 
         // Draw edges
         for (const auto& edge : edges) {
@@ -204,8 +292,9 @@ int main() {
             window.draw(vertex);
         }
 
-        // Draw temporary line if connecting
+        // Draw connecting line
         if (isConnecting && selectedVertexIndex != static_cast<std::size_t>(-1)) {
+            sf::Vector2f worldPosition = window.mapPixelToCoords(sf::Mouse::getPosition(window), view);
             sf::Vertex tempLine[] = {
                 sf::Vertex(vertices[selectedVertexIndex].getPosition() + sf::Vector2f(5.f, 5.f), sf::Color::White),
                 sf::Vertex(worldPosition, sf::Color::Yellow)
@@ -213,9 +302,20 @@ int main() {
             window.draw(tempLine, 2, sf::Lines);
         }
 
+        if(isConnecting) {
+            backgroundColor = sf::Color(40,40,40);
+        } else {
+            backgroundColor = sf::Color::Black;
+        }
         // Draw text
+        window.setView(window.getDefaultView()); // Reset view for UI
         window.draw(vertexCountText);
         window.draw(colorCountText);
+        
+        if(backtracking) {
+            solverModeText.setString("Algorithm: Backtracking");
+        } else solverModeText.setString("Algorithm: Greedy");
+        window.draw(solverModeText);
 
         window.display();
     }
