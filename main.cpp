@@ -134,6 +134,50 @@ std::vector<std::size_t> colorGraphUsingBacktracking(const std::map<std::size_t,
 }
 
 //----
+const float GRID_SPACING = 50.f;  // Distance between grid lines
+const sf::Color GRID_COLOR = sf::Color(50, 50, 50); // Dim gray for grid lines
+const sf::Color AXIS_COLOR = sf::Color(200, 200, 200); // Lighter gray for axes
+const float LINE_THICKNESS = 1.f; // Thickness of grid lines
+
+void drawGrid(sf::RenderWindow& window, const sf::View& view, sf::Font& font) {
+    sf::FloatRect viewBounds(
+        view.getCenter() - view.getSize() / 2.f,
+        view.getSize()
+    );
+
+    // Draw vertical grid lines
+    for (float x = std::floor(viewBounds.left / GRID_SPACING) * GRID_SPACING;
+         x < viewBounds.left + viewBounds.width; x += GRID_SPACING) {
+        sf::Vertex line[] = {
+            sf::Vertex(sf::Vector2f(x, viewBounds.top), GRID_COLOR),
+            sf::Vertex(sf::Vector2f(x, viewBounds.top + viewBounds.height), GRID_COLOR)
+        };
+        window.draw(line, 2, sf::Lines);
+    }
+
+    // Draw horizontal grid lines
+    for (float y = std::floor(viewBounds.top / GRID_SPACING) * GRID_SPACING;
+         y < viewBounds.top + viewBounds.height; y += GRID_SPACING) {
+        sf::Vertex line[] = {
+            sf::Vertex(sf::Vector2f(viewBounds.left, y), GRID_COLOR),
+            sf::Vertex(sf::Vector2f(viewBounds.left + viewBounds.width, y), GRID_COLOR)
+        };
+        window.draw(line, 2, sf::Lines);
+    }
+
+    // Draw x-axis (horizontal) and y-axis (vertical)
+    sf::Vertex xAxis[] = {
+        sf::Vertex(sf::Vector2f(viewBounds.left, 0.f), AXIS_COLOR),
+        sf::Vertex(sf::Vector2f(viewBounds.left + viewBounds.width, 0.f), AXIS_COLOR)
+    };
+    window.draw(xAxis, 2, sf::Lines);
+
+    sf::Vertex yAxis[] = {
+        sf::Vertex(sf::Vector2f(0.f, viewBounds.top), AXIS_COLOR),
+        sf::Vertex(sf::Vector2f(0.f, viewBounds.top + viewBounds.height), AXIS_COLOR)
+    };
+    window.draw(yAxis, 2, sf::Lines);
+}
 
 
 int main() {
@@ -277,6 +321,8 @@ int main() {
         // Clear and set view
         window.clear(backgroundColor);
         window.setView(view);
+
+        drawGrid(window, view, font);
 
         // Draw edges
         for (const auto& edge : edges) {
