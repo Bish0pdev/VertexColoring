@@ -19,7 +19,7 @@ This project is built and compiled in c++, using the sfml library on for things 
 * array
 
 ### Running the program
-Any changes made will need to be compiled using ```g++```. I am running linux *Ubuntu 22.04.5 LTS*.
+The program is compiled in ```g++```. I am running linux *Ubuntu 22.04.5 LTS*.
 The program can be comipled using this command
 
 ```g++ main.cpp -o sfml-app -lsfml-graphics -lsfml-window -lsfml-system```
@@ -29,5 +29,4 @@ And Run using this command
 ```./sfml-app```
 
 #### Notes
-* Make sure you are in the projects directory before running any commands
 * to install sfml on ubuntu, run ```sudo apt-get install libsfml-dev```
